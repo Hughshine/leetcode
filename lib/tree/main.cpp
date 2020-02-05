@@ -3,10 +3,15 @@
 int main()
 {
     AvlTree* tree = new AvlTree();
-    tree->insert(100);
-    tree->insert(101);
-    tree->insert(102);
-    // tree->insert(103);
-    tree->insert(104);
-    cout << tree->find(104) << endl;
+    tree->insert(9);
+    tree->remove(19);
+    tree->insert(14);
+    tree->remove(19);
+    tree->remove(9);
+    tree->insert(0);
+    tree->insert(3);
+    cout << tree->find(3) << endl;
+    // tree->insert(4);
+    // tree->insert(0);
+    // tree->remove(9);
 }

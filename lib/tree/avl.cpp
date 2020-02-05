@@ -22,7 +22,12 @@ bool AvlTree::insert(int v) {
 }
 
 bool AvlTree::remove(int v) {
-
+    bool ret = remove(v, root);
+    if(ret == true) {
+        get_new_height(root);
+        balance(root);
+    }
+    return ret;
 }
 
 bool AvlTree::insert(int v, AvlNode*& node) {
@@ -36,7 +41,7 @@ bool AvlTree::insert(int v, AvlNode*& node) {
     if(node->val < v) {
         bool ret = insert(v, node->right);
         if(ret) {
-            get_new_height(node);
+            get_new_height(node);   // 可能是不需要的
             balance(node->right);
             return true;
         }
@@ -56,28 +61,86 @@ bool AvlTree::insert(int v, AvlNode*& node) {
 
 
 bool AvlTree::remove(int v, AvlNode*& node) {
+    if(node == nullptr) {
+        return false;
+    }
+    if(node->val == v) {
+        AvlNode* l=node->left, *r=node->right;
+        if(l == nullptr && r == nullptr) { // 没有孩子
+            delete node;
+            node = nullptr;
+            return true;
+        }
 
+        if(l != nullptr && r != nullptr) { // 两个孩子
+            // Attention! This is really really important, becacuse
+            // when we remove the successor
+            // the whole tree may mutate, and change *& node
+            // bacause it's a reference.
+            // debug this for hours.
+            AvlNode *n = node;
+            int value = get_min_val(node->right);
+            remove(value); // 这个被删除节点一定是单孩子情况
+            n->val = value;
+            return true;
+        }
+
+        {   // 一个孩子
+            auto child = node->left!=nullptr?node->left:node->right;
+            delete node;
+            node = child;
+            return true;
+        }
+    }
+    if(node->val < v) {
+        bool ret = remove(v, node->right);
+        if(ret == true) {
+            get_new_height(node); // 可能是不需要的，balance时不需要保证根的计数正确
+            balance(node);
+        }
+        return ret;
+    } else { // node->val > v
+        bool ret = remove(v, node->left);
+        if(ret == true) {
+            get_new_height(node);
+            balance(node);
+        }
+        return ret;
+    }
+}
+
+/**
+ * 这个节点的右子树层数最高为1，删除这个节点，一定造成其父节点左子树高度减少1。
+ * 删除这个结点可能造成全树结构改变，单独写一个删除函数比较麻烦。
+ */
+int AvlTree::get_min_val(AvlNode *node) {
+    if(node == nullptr) return -1;
+    while(node->left!=nullptr) {
+        node = node->left;
+    }
+    return node->val;
 }
 
 void AvlTree::balance(AvlNode*& node) {
-    AvlNode* left = node->left;
-    AvlNode* right = node->right;
+    if(node == nullptr) return;
+    AvlNode*& left = node->left;
+    AvlNode*& right = node->right;
     if(diff(left, right) == 2) {
-        if(diff(left, right) > 0) { // LL
+        if(diff(left->left, left->right) > 0) { // LL
             lrotate(left, node);
-        } else if (diff(left, right) < 0) { // LR
-            rrotate(left->right, left);
+        } else if (diff(left->left, left->right) < 0) { // LR
+            rrotate(left, left->right);
             lrotate(left, node);
         } else {
             cerr << "balance error" << endl;
             return;
         }
     } else if(diff(left, right)== -2) {
-        if(diff(left, right) < 0) { // RR
-            lrotate(node, right);
-        } else if (diff(left, right) > 0) { // RL
-            rrotate(right, right->left);
-            lrotate(node, right);
+        if(diff(right->left, right->right) < 0) { // RR
+            rrotate(node, right);
+        } else if (diff(right->left, right->right) > 0) { // RL
+            lrotate(right->left, right);
+            rrotate(node, right);
         } else {
             cerr << "balance error" << endl;
         }

@@ -24,12 +24,14 @@ private:
     bool insert(int v, AvlNode*& node);
     bool remove(int v, AvlNode*& node);
     int get_min_val(AvlNode* node);
+
     void balance(AvlNode*& node);
+    static void lrotate(AvlNode *&left, AvlNode *&parent);
+    static void rrotate(AvlNode *&parent, AvlNode *&right);
+
     static int get_new_height(AvlNode* node);
     static int max(int a, int b);
     static int diff(AvlNode* l, AvlNode* r);
-    static void lrotate(AvlNode*& left, AvlNode*& parent);
-    static void rrotate(AvlNode*& parent, AvlNode*& right);
 };
 
 
