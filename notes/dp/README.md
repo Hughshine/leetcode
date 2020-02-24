@@ -47,7 +47,7 @@ string.substr(start, len);
     }
 ```
 
-## dp
+### dp
 
 自己的思路真的乱，声明的那些地方就更不要错了；
 
@@ -63,3 +63,68 @@ dp[i][j] = p[j-1] != '*' ? dp[i-1][j-1] && s[i-1] = p[j-1] (额外算上'.'的�
 
 动态规划的矩阵，增长的方式一般不会仅是一个方向；如果少考虑了情况，可能就会出现这种错误。（递推关系一定要能表示全集）。
 
+## 44. wildcard matching
+
+### dp
+
+这道题的约束比第10题更小，因为'*'是否match不再需要根据前面的元素，因而有更简化的算法。用dp做和第10题的思路完全一致
+
+```c++
+define dp[i][j] : s[0:i-1] match p[0:j-1] 
+
+init dp: dp[0][0] = true, dp[0][i] := (p[0:i-1] == "*"*(i-1))
+
+p[j] is not '*': dp[i][j] = s[i-1] match p[j-1]
+    is '*': dp[i][j] = dp[i][j-1] ('*' match nothing)  || dp[i-1][j] ('*' match one more char)
+```
+
+### iterate
+
+一个pattern可能有多个方式去匹配同一个string，（如 aaa与**），我们使最后一个\*匹配最多的字符，前面的\*匹配（能匹配目标串）最少量的字符，（这其实是一种贪心的想法）。
+
+设置两个指针分别指向两个string的开始，进行匹配。如果pattern串非\*，则正常匹配前移指针。如果是\*，记录此时原串与模式串的指针位置，从\*匹配0个字符开始尝试，即下一次迭代，原串位置不变，模式串位置+=1；如果遇到mismatch，则返回上一次\*的匹配位置，然后让\*匹配多一个字符重新尝试（即目标串指针++；注意，记录的指针位置也加1）。
+
+因为我们让每个\*都在匹配尽可能少的必要的符号，所以在模式串指针到达结尾后，也要重新尝试，让上一个\*匹配更多的字符。
+
+循环跳出的条件是：mismatch，且这个位置前也没有遇到过\*，直接return false；或者是一直尝试让一个\*match了全部的目标串，但一直没有办法达成条件（此时目标串指针到达结尾，模式串指针不在结尾）。
+
+尝试完成后，模式串指针的后面可能是一堆\*，处理一下就好了。
+
+```c++
+class Solution {
+public:
+    bool isMatch(string s, string p) {
+        int m=s.size(), n=p.size();
+        int i=0, j=0, lasti=-1, lastj=-1;
+        for(; i<m; i++, j++) {
+            // cout << i << " " << j << " " << lasti << " " << lastj << endl;
+            if(p[j] == '*') {
+                lasti = i;
+                lastj = j;
+                i--;
+                continue;
+            }
+            if(j == n || (s[i] != p[j] && p[j] != '?')) { // 匹配失败
+                // goback
+                if(lastj < 0) 
+                    return false;
+                    
+                i = lasti++;
+                j = lastj;
+                
+                continue;
+            }
+        }
+        // cout << i << " " << j << endl;
+        // append *
+        while(p[j] == '*') {
+            j++;
+        }
+        return j==n;
+    }
+};
+```
+
+### recursion
+
+递归思路也很清晰，可以使用与迭代方法相似的剪枝，认为原因是这道题的“递推依赖”很简单，所以dp性能稍差。dp可能是稳定的算法吧QAQ。
