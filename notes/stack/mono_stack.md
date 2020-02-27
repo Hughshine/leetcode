@@ -77,3 +77,82 @@ public:
 ### 分治
 
 感觉不是很直观的分治，切分必须在最小的元素。
+
+## 42. [接雨水 2D](https://www.acwing.com/solution/LeetCode/content/121/)
+
+### 多次线性扫描
+
+开始考虑，要找到每个极小值区间。不对。
+
+对于最终的水坑，每一个位置的深度决定于它左边最大的那个和右边最大的那个，这个为什么没想到呢QAQ。。
+
+所以遍历两次，分别找每个位置左边最大与右边最大，最后再遍历一次得到解。（第三次遍历可以喝第二次扫描结合）。不过都是线性的嘛。
+
+```c++
+class Solution {
+public:
+    int trap(vector<int>& height) {
+        int m = height.size();
+        vector<int> lmax(m, 0);
+        vector<int> rmax(m, 0);
+        for(int i=1; i<m; i++) {
+            lmax[i] = max(height[i-1], lmax[i-1]);
+        }
+        for(int i=m-2;i>=0;i--) {
+            rmax[i] = max(height[i+1], rmax[i+1]);
+        }
+        int res=0;
+        for(int i=1;i<m-1;i++) {
+            int h = min(lmax[i], rmax[i]);
+            // if(height[i] >= h) continue;
+            res += max(h-height[i], 0);
+        }
+        return res;
+    }
+};
+```
+
+这个问题自己想了好久，。。开始也以为遍历可以的，想来想去又想不明白了，没有思考到核心问题，就是“决定每个位置水的高度的，究竟是什么？”；反而自己在想“每个水坑所在的区间是什么样子的”；思考的方式，思考对象的粒度要改变。
+
+### 单调栈
+
+这个比较符合自己最初的思路，但是头脑比较混乱的话，这个算法的核心是，将水划分成“行”。
+
+<!-- 维护一个递减栈，栈中维护的是U型区域的左右高，即栈中相邻两个元素代表一个U型区域。 -->
+
+<!-- 每一次更新的时候，相当于找未计算的水的深度，每次更新一个矩形面积。 -->
+
+<!-- 对于每个位置i，遍历经过它以后，我们计算完的是，它左侧，它的高度以下的水的多少。 -->
+
+```c++
+class Solution {
+public:
+    int trap(vector<int>& height) {
+        int m = height.size();
+        stack<int> st;
+        int res=0;
+        for(int i=0; i<m; i++) {
+            if(st.empty()) {
+                st.push(i);
+                continue;
+            }
+            int top = st.top();
+            while(height[top] < height[i]) {
+                st.pop();
+                if(st.empty()) break;
+                int h = min(height[i], height[st.top()]);
+                res += (i-st.top()-1)*(h-height[top]);              
+                top = st.top();
+            }
+            st.push(i);
+        }
+        return res;
+    }
+};
+```
+
+### 动态规划：TODO
+
+
+
+
