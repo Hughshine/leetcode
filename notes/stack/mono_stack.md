@@ -80,7 +80,7 @@ public:
 
 ## 42. [接雨水 2D](https://www.acwing.com/solution/LeetCode/content/121/)
 
-### 多次线性扫描
+### 多次线性扫描（其实就是简单的动态规划形式）
 
 开始考虑，要找到每个极小值区间。不对。
 
@@ -114,9 +114,40 @@ public:
 
 这个问题自己想了好久，。。开始也以为遍历可以的，想来想去又想不明白了，没有思考到核心问题，就是“决定每个位置水的高度的，究竟是什么？”；反而自己在想“每个水坑所在的区间是什么样子的”；思考的方式，思考对象的粒度要改变。
 
+
+### 双指针收缩
+
+空间复杂度可以进一步优化，变成O(1)；是3D算法的降维（这个应该是相似问题的通用思考方式）。
+
+l左侧最高高度为lh，r右侧最高高度为rh，当l右移时，此时的h一定是lh：如果l的高度>h，没有影响； 如果 l < h，h一定是lh。（若是rh，那么一定有时刻l, rh两块是对应的，这不符合我的移动指针的规律。）
+
+```c++
+class Solution {
+public:
+    int trap(vector<int>& height) {
+        int m=height.size();
+        int l=0, r=m-1;
+        int h=0;
+        int res=0;
+        while(l<r) {
+            if(height[l] <= height[r]) {
+                h=max(h, height[l++]);
+                res+=max(h - height[l], 0);
+            } else {
+                h=max(h, height[r--]);
+                res+=max(h- height[r], 0);
+            }
+        }
+        return res;
+    }
+};
+```
+
 ### 单调栈
 
-这个比较符合自己最初的思路，但是头脑比较混乱的话，这个算法的核心是，将水划分成“行”。
+这个比较符合自己最初的思路，但是头脑比较混乱。这个算法的核心是，将水划分成“行”。
+
+我们知道左边第一个大的和右边第一个大的，也能得到正确解答。（遍历的方法要知道左右最大的）。
 
 <!-- 维护一个递减栈，栈中维护的是U型区域的左右高，即栈中相邻两个元素代表一个U型区域。 -->
 
@@ -151,7 +182,102 @@ public:
 };
 ```
 
-### 动态规划：TODO
+### 407. trapping water 3D
+
+2D 与 3D是完全不一样的了。2D中每个位置的水被2个块（1D）确定，3D中确是被“一个圈”（2D）确定（而非四个）。开始想要遍历四次，当然错了。
+
+算法是逐步“缩小圈”；其实对应2D情景中的双指针算法（就是0空间的算法），只不过3D中有一圈指针而已。
+
+> 用优先队列维护圈，每次取出最小的，根据它向内收缩（上下左右都要尝试，需要记录每个位置是否被访问过）；再维护一个变量（这个变量的正确性下面阐述），记录出队列的元素中最大的，作为更新res的height。
+> 
+> 对应的二维情景就是，左右两个指针向中间收缩，每次收缩的是更小的那个指针；同时维护一个收缩过的位置的最大高度，用于更新。
+> 
+> 正确性：需要用数学归纳法思考，我们称被拓展的新的块叫b，h高度的块叫a；注意，每一个拓展块，在拓展时，都对应那个时刻围墙的载水的下限；a比b矮，相当于此时围墙以外的所有块都比围墙要矮，此时更新 h = max(h, newh)是很自然的；如果a比b高，假设b拓自a（若干步的、间接的，不一定必须相连），b周围的点的上界是a很好理解；b非拓展自a，是不可能的，因为不可能先选b再选a（因为a比b大）
+> 
+> 意思是，可以证明 h 是和目前被拓展的块直接相关的约束高度。
+
+自己的代码写的非常冗余，不好看。
+
+提交leetcode，函数不能使用static变量，不同测试样例之间会有影响。（似乎可以用这个方法做坏事？因为程序可以知道此时是第几个测试样例。）
+
+```c++
+class Solution {
+public:
+    struct pos {
+        pos(int x, int y, int h){
+            this->x = x; this->y = y; this->h = h;
+        }
+        int x=0; 
+        int y=0;
+        int h=0;
+    };
+    struct cmp {
+        bool operator()(pos p1, pos p2) {
+            return p1.h > p2.h;
+        }
+    };
+    int m,n;
+    int h;
+    void inline step(vector<vector<int>>& heightMap, vector<vector<bool>>& visited, priority_queue<pos, vector<pos>, cmp>& q, pos p, int &res){
+        h=max(h, p.h);
+        if(p.y-1 >= 0 && !visited[p.x][p.y-1]) {
+            visited[p.x][p.y-1] = true;
+            res += max(h-heightMap[p.x][p.y-1], 0);
+            q.push(pos(p.x, p.y-1, heightMap[p.x][p.y-1]));
+        } 
+        if(p.y+1 < n && !visited[p.x][p.y+1]) {
+            visited[p.x][p.y+1] = true;
+            res += max(h-heightMap[p.x][p.y+1], 0);
+            q.push(pos(p.x, p.y+1, heightMap[p.x][p.y+1]));
+        }
+        if(p.x-1 >= 0 && !visited[p.x-1][p.y]) {
+            visited[p.x-1][p.y] = true;
+            res += max(h-heightMap[p.x-1][p.y], 0);
+            q.push(pos(p.x-1, p.y, heightMap[p.x-1][p.y]));
+        } 
+        if(p.x+1 < m && !visited[p.x+1][p.y]) {
+            visited[p.x+1][p.y] = true;
+            res += max(h-heightMap[p.x+1][p.y], 0);
+            q.push(pos(p.x+1, p.y, heightMap[p.x+1][p.y]));
+        }
+    }
+
+    int trapRainWater(vector<vector<int>>& heightMap) {
+        if(heightMap.size() <= 2) 
+            return 0;
+        m=heightMap.size(), n=heightMap[0].size();
+        priority_queue<pos, vector<pos>, cmp> p;
+        vector<vector<bool>> visited(m, vector<bool>(n, false));
+        int res=0;
+        h=0;
+
+        for(int i=0; i<m; i++) {
+            visited[i][0] = visited[i][n-1] = true;
+            p.push(pos(i, 0, heightMap[i][0]));
+            p.push(pos(i, n-1, heightMap[i][n-1]));
+        }
+        for(int j=1; j<n-1; j++) {
+            visited[0][j] = visited[m-1][j] = true;
+            p.push(pos(0, j, heightMap[0][j]));
+            p.push(pos(m-1, j, heightMap[m-1][j]));
+        }
+        while(!p.empty()) {
+            pos P = p.top();
+            p.pop();
+            step(heightMap, visited, p, P, res);
+            // cout << P.x<<" " <<P.y << " res: " << res << endl;
+            // for(int i=0; i<m; i++) {
+            //     for(int j=0; j<n; j++) {
+            //         cout << visited[i][j] << " ";
+            //     }
+            //     cout << endl << endl;
+            // }
+        }
+        return res;
+    }
+};
+```
+
 
 
 
