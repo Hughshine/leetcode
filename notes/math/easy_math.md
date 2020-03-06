@@ -42,3 +42,47 @@ public:
     }
 };
 ```
+
+## 面试题57-II 和为s的连续正数序列 easy
+
+没有思考过，不是很好做。数学问题要想一想参数之间的依赖关系，可能会很简化。
+
+一个连续区间实际由起点与终点，或起点与向量长度表示；我们希望区间的数值和为target，可以由等差数列公式计算。区间数其实时很多的，但反过来，我们能否去尝试寻找所有可能的起点呢？
+
+长度为i时，根据target，我们能算出相应的x，我们检查x是否为整数(每个i对应的x是唯一的)。如此，遍历i，即可得到一个线性算法。
+
+
+```c++
+class Solution {
+public:
+    vector<vector<int>> findContinuousSequence(int target) {
+        vector<vector<int>> res;
+        int t=target;
+        for(int i=1; i<t ;i++) {
+            if((2*t)%(i+1)!=0) continue;
+            int t1 = 2*t /(i+1);
+            // cout << t1 << " ";
+            if(t1-i < 2) break;
+            int t2 = t1-i;
+            // cout << t2 << " ";
+            if(t2%2!=0) continue;
+            int x = t2/2;
+            // cout << x << " " << i << endl;
+            vector<int> v(i+1);
+            for(int j=0;j<i+1;j++) {
+                v[j] = x;
+                x++;
+            }
+            res.push_back(v);
+        }
+        vector<vector<int>> rres(res.size());
+        int i=0;
+        for(auto iter=res.rbegin(); iter!=res.rend(); iter++, i++) {
+            rres[i] = *iter;
+        }
+        return rres;
+    }
+};
+```
+
+最后的reverse不好看.可能因为第二层的数组长度不确定，不能直接使用`std::reverse`?
