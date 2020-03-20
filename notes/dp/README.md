@@ -221,3 +221,67 @@ public:
     }
 };
 ```
+
+## 62,63 不同路径
+
+非降路径问题，没有障碍物时直接就是C_{m+n}^{n}
+
+```c++
+class Solution {
+public:
+    int uniquePaths(int m, int n) {
+        long res = 1;
+        int i = min(m, n)-1;
+        for(int x=m+n-2, y=1; i>0; i--) {
+            res *= x--;
+            res /= y++;
+        }
+        return res;
+    }
+};
+```
+
+使用int放res范围不够，但是除法只能从小变大，因为可能会除不尽。
+
+
+有了障碍物，就要动态规划了；算是最经典的动态规划问题了。开始不想开一个新数组的，但是int放不下结果。
+
+空间可以修成O(n);
+
+```c++
+class Solution {
+public:
+    int uniquePathsWithObstacles(vector<vector<int>>& obstacleGrid) {
+        if(obstacleGrid[0][0] == 1) return 0;
+        int m = obstacleGrid.size();
+        int n = obstacleGrid[0].size();
+
+        vector<vector<long>> dp(m, vector<long>(n, 0));
+        dp[0][0] = 1;
+        for(int i=1; i<m; i++) {
+            if(obstacleGrid[i][0] == 1)
+                dp[i][0] = 0;
+            else 
+                dp[i][0] = dp[i-1][0];
+        }
+        for(int i=1; i<n; i++) {
+            if(obstacleGrid[0][i] == 1)
+                dp[0][i] = 0;
+            else 
+                dp[0][i] = dp[0][i-1];
+        }
+
+        for(int i=1; i<m; i++) {
+            for(int j=1; j<n; j++) {
+                if(obstacleGrid[i][j] == 1) {
+                    dp[i][j] = 0;
+                    continue;
+                }
+                dp[i][j] = dp[i-1][j] + dp[i][j-1];
+            }
+        }
+        return dp[m-1][n-1];
+    }
+};
+```
+

@@ -86,3 +86,51 @@ public:
 ```
 
 最后的reverse不好看.可能因为第二层的数组长度不确定，不能直接使用`std::reverse`?
+
+### 8. atoi (int) 
+
+通过记录位数、判断是否会触发溢出会更好，atoLL就没办法用这种方法做了。
+
+```c++
+class Solution {
+public:
+    int myAtoi(string str) {
+        bool start = false;
+        bool neg = false;
+        long res = 0;
+        for(auto ch: str) {
+            if(!start) {
+                if(isdigit(ch)) {
+                    start = true;
+                    res *= 10;
+                    res += (ch - '0');
+                } else if(ch == ' ') {
+                    continue;
+                } else if(ch == '+') {
+                    neg = false;
+                    start = true;
+                } else if(ch == '-') {
+                    neg = true;
+                    start = true;
+                } else {
+                    return 0;
+                }
+            } else {
+                if(isdigit(ch)) {
+                    res *= 10;
+                    res += (ch - '0');
+                    if(!neg && res >= INT_MAX) {
+                        return INT_MAX;
+                    } 
+                    if(neg && -res <= INT_MIN ) {
+                        return INT_MIN;
+                    }
+                } else {
+                    break;
+                }
+            }
+        }
+        return neg?-res:res;
+    }
+};
+```
