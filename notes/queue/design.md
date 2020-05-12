@@ -54,3 +54,55 @@ public:
  * int param_3 = obj->pop_front();
  */
 ```
+
+## 239. 滑动窗口最大值
+
+单调队列就是所谓的最大值队列，竟然没有意识到以前做过，我的天。
+
+```cpp
+class MonotonicQueue {
+public:
+    void push(int n) {
+        nq.push(n);
+        while(!q.empty() && q.back() < n) {
+            q.pop_back();
+        }
+        q.push_back(n);
+    }
+    int max() {
+        return q.front();
+    }
+    void pop() {
+        if(q.front() == nq.front()) {
+            q.pop_front();
+            nq.pop();
+        } else {
+            nq.pop();
+        }
+    }
+    deque<int> q;
+    queue<int> nq;
+};
+
+class Solution {
+public:
+    vector<int> maxSlidingWindow(vector<int>& nums, int k) {
+        // 优先队列不行：pop掉的是位置最前的
+        MonotonicQueue q;
+        int m = nums.size();
+        // 如何维护一个队列的最大值
+        vector<int> result;
+        for(int i=0; i<m; i++) {
+            if(i < k-1) {
+                q.push(nums[i]);
+            }
+            else {
+                q.push(nums[i]);
+                result.emplace_back(q.max());
+                q.pop();
+            }
+        }
+        return result;
+    }
+};
+```
