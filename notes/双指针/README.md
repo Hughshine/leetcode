@@ -1,3 +1,123 @@
+# 双指针
+
+## 快慢指针
+
+1. 判断链表中的环
+
+```c++
+class Solution {
+public:
+    bool hasCycle(ListNode *head) {
+        ListNode *slow, *fast;
+        slow = fast = head;
+        while(fast != NULL && fast->next != NULL) {
+            fast = fast->next->next;
+            slow = slow->next;
+            if(fast == slow) return true;
+        }
+        return false;
+    }
+};
+```
+
+找到环的起点：相遇点距离环的起始点，就是再走已经走过的步数的距离，把fast放到头，慢速一起走，直到相交即可。142. 环形链表 II
+
+```c++
+class Solution {
+public:
+    ListNode *detectCycle(ListNode *head) {
+        ListNode *slow, *fast;
+        slow = fast = head;
+        while(fast != NULL && fast->next != NULL) {
+            fast = fast->next->next;
+            slow = slow->next;
+            if(fast == slow) {
+                fast = head;
+                while(fast != slow) {
+                    fast = fast->next;
+                    slow = slow->next;
+                }
+                return fast;
+            }
+        }
+        return NULL;
+    }
+};
+```
+
+2. 找中间结点
+
+```cpp
+class Solution {
+public:
+    ListNode* middleNode(ListNode* head) {
+        ListNode *slow, *fast;
+        slow = fast = head;
+        while(fast != NULL && fast->next != NULL) {
+            fast = fast->next->next;
+            slow = slow->next;
+        } 
+        return slow;
+    }
+};
+```
+
+3. 找到倒数第k个元素（另，加一个preheader很好用）
+
+```cpp
+// 19. 删除链表的倒数第N个节点
+class Solution {
+public:
+    ListNode* removeNthFromEnd(ListNode* head, int n) {
+        ListNode *slow, *fast;
+        slow = fast = head;
+        ListNode dummy = ListNode(0);
+        dummy.next = head;
+        ListNode* former = &dummy;
+
+        while(n--) {
+            fast = fast->next;
+        } 
+        while(fast != NULL) {
+            fast = fast->next;
+            slow = slow->next;
+            former = former->next;
+        }
+
+        former->next = slow->next;
+        delete slow;
+        return dummy.next;
+    }
+};
+```
+
+4. 找到相交链表的交点：“互补”。需要一点点思路。
+
+```cpp
+class Solution {
+public:
+    ListNode *getIntersectionNode(ListNode *headA, ListNode *headB) {
+        ListNode* pntA = headA, *pntB = headB;
+        if(pntA == NULL || pntB == NULL) {
+            return NULL;
+        }
+        while(pntA != pntB) {
+            pntA = pntA ? pntA->next : headB;
+            pntB = pntB ? pntB->next : headA;
+        }
+        return pntA;
+    }
+};
+```
+
+## 左右指针
+
+1. 二分查找
+
+2. 有序数组的“两数之和”
+
+3. 反转数组
+
 ## 135. 分糖果
 
 第一想法是，要找在严格单增、单减区间的排名，取两者最大值。
